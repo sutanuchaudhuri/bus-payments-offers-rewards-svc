@@ -22,6 +22,24 @@ components:
         - FUEL
         - SHOPPING
 
+    PaymentPlanType:
+      type: string
+      enum:
+        - FULL_PAYMENT
+        - INSTALLMENT_6_MONTHS
+        - INSTALLMENT_12_MONTHS
+        - INSTALLMENT_24_MONTHS
+        - MINIMUM_PAYMENT
+
+    PaymentPlanStatus:
+      type: string
+      enum:
+        - PROPOSED
+        - ACTIVE
+        - COMPLETED
+        - DEFAULTED
+        - CANCELLED
+
 paths:
   # Offer Management - Updated with customer_id requirements
   /api/offers:
@@ -464,3 +482,376 @@ paths:
           description: Offer not found
         '500':
           description: Internal server error
+
+  # Payment Plan Management
+  /api/payments/plans/calculate:
+    post:
+      tags:
+        - Payment Plans
+      summary: Calculate payment plan options
+      description: Calculate available payment plan options for a given amount with different terms, interest rates, and reward points
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: float
+                  minimum: 1
+                  description: Principal amount to be financed
+                customer_id:
+                  type: integer
+                  description: Customer ID for personalized plan calculations
+              required:
+                - amount
+                - customer_id
+      responses:
+        '200':
+          description: Payment plan calculations with detailed breakdown
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer_id:
+                    type: integer
+                  customer_name:
+                    type: string
+                  requested_amount:
+                    type: number
+                  available_plans:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        plan_type:
+                          type: string
+                          enum: [FULL_PAYMENT, INSTALLMENT_6_MONTHS, INSTALLMENT_12_MONTHS, INSTALLMENT_24_MONTHS, MINIMUM_PAYMENT]
+                        plan_name:
+                          type: string
+                        description:
+                          type: string
+                        principal_amount:
+                          type: number
+                        monthly_payment:
+                          type: number
+                        total_amount:
+                          type: number
+                        total_interest:
+                          type: number
+                        processing_fee:
+                          type: number
+                        duration_months:
+                          type: integer
+                        interest_rate:
+                          type: number
+                        penalty_rate:
+                          type: number
+                        late_payment_penalty:
+                          type: number
+                        reward_points_earned:
+                          type: integer
+                        cost_vs_full_payment:
+                          type: number
+                        cost_increase_percentage:
+                          type: number
+                        schedule_preview:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              month:
+                                type: integer
+                              payment_amount:
+                                type: number
+                              principal_amount:
+                                type: number
+                              interest_amount:
+                                type: number
+                              remaining_balance:
+                                type: number
+                  total_plans:
+                    type: integer
+                  calculation_date:
+                    type: string
+                    format: date-time
+                  terms_and_conditions:
+                    type: object
+        '400':
+          description: Invalid input data
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  /api/payments/plans/create:
+    post:
+      tags:
+        - Payment Plans
+      summary: Create and activate a payment plan
+      description: Create and activate a specific payment plan for a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                  description: Customer ID
+                credit_card_id:
+                  type: integer
+                  description: Credit card to be used for the plan
+                plan_type:
+                  type: string
+                  enum: [FULL_PAYMENT, INSTALLMENT_6_MONTHS, INSTALLMENT_12_MONTHS, INSTALLMENT_24_MONTHS, MINIMUM_PAYMENT]
+                  description: Type of payment plan
+                amount:
+                  type: number
+                  format: float
+                  minimum: 1
+                  description: Principal amount to finance
+              required:
+                - customer_id
+                - credit_card_id
+                - plan_type
+                - amount
+      responses:
+        '201':
+          description: Payment plan created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  payment_plan:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      plan_reference:
+                        type: string
+                      customer_id:
+                        type: integer
+                      plan_type:
+                        type: string
+                      principal_amount:
+                        type: number
+                      total_amount:
+                        type: number
+                      monthly_payment:
+                        type: number
+                      interest_rate:
+                        type: number
+                      processing_fee:
+                        type: number
+                      total_interest:
+                        type: number
+                      reward_points_earned:
+                        type: integer
+                      status:
+                        type: string
+                      start_date:
+                        type: string
+                        format: date
+                      end_date:
+                        type: string
+                        format: date
+                      next_payment_date:
+                        type: string
+                        format: date
+        '400':
+          description: Invalid input data or insufficient credit
+        '404':
+          description: Customer, credit card, or plan type not found
+        '500':
+          description: Internal server error
+
+  /api/payments/plans/customer/{customer_id}:
+    get:
+      tags:
+        - Payment Plans
+      summary: Get customer payment plans
+      description: Retrieve all payment plans for a specific customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+          description: Customer ID
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [PROPOSED, ACTIVE, COMPLETED, DEFAULTED, CANCELLED]
+          description: Filter by payment plan status
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+          description: Number of plans per page
+      responses:
+        '200':
+          description: List of customer payment plans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer_id:
+                    type: integer
+                  customer_name:
+                    type: string
+                  payment_plans:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        plan_reference:
+                          type: string
+                        plan_type:
+                          type: string
+                        plan_name:
+                          type: string
+                        principal_amount:
+                          type: number
+                        total_amount:
+                          type: number
+                        monthly_payment:
+                          type: number
+                        status:
+                          type: string
+                        schedule_summary:
+                          type: object
+                          properties:
+                            total_payments:
+                              type: integer
+                            completed_payments:
+                              type: integer
+                            remaining_payments:
+                              type: integer
+                            completion_percentage:
+                              type: number
+                  total_plans:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  /api/payments/plans/{plan_reference}/schedule:
+    get:
+      tags:
+        - Payment Plans
+      summary: Get payment plan schedule
+      description: Get detailed payment schedule for a specific payment plan
+      parameters:
+        - in: path
+          name: plan_reference
+          required: true
+          schema:
+            type: string
+          description: Payment plan reference number
+      responses:
+        '200':
+          description: Detailed payment plan schedule
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payment_plan:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      plan_reference:
+                        type: string
+                      plan_type:
+                        type: string
+                      principal_amount:
+                        type: number
+                      total_amount:
+                        type: number
+                      monthly_payment:
+                        type: number
+                      status:
+                        type: string
+                  schedule:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        installment_number:
+                          type: integer
+                        due_date:
+                          type: string
+                          format: date
+                        payment_amount:
+                          type: number
+                        principal_amount:
+                          type: number
+                        interest_amount:
+                          type: number
+                        remaining_balance:
+                          type: number
+                        status:
+                          type: string
+                          enum: [PENDING, PAID, OVERDUE, PARTIAL]
+                        paid_amount:
+                          type: number
+                        paid_date:
+                          type: string
+                          format: date
+                          nullable: true
+                        late_fee:
+                          type: number
+                        reward_points:
+                          type: integer
+                  summary:
+                    type: object
+                    properties:
+                      total_payments:
+                        type: integer
+                      total_amount_due:
+                        type: number
+                      total_amount_paid:
+                        type: number
+                      remaining_balance:
+                        type: number
+                      overdue_payments:
+                        type: integer
+                      next_payment_date:
+                        type: string
+                        format: date
+                        nullable: true
+                      completion_percentage:
+                        type: number
+        '404':
+          description: Payment plan not found
+        '500':
+          description: Internal server error
+
+  # Refund System Management

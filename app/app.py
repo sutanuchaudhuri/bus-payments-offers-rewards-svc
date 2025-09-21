@@ -58,8 +58,14 @@ def create_app():
     # Import and initialize db from models
     from app.models import db
     db.init_app(app)
-    migrate = Migrate(app, db)
-
+    # Enable CORS for API endpoints - allow access from all origins for development
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": ["*"],  # Allow all origins for development
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    }, supports_credentials=True)
     # Import models (after db initialization)
     from app.models import Customer, CreditCard, Merchant, Offer, CustomerOffer, Payment, Reward, CustomerProfileHistory
 
