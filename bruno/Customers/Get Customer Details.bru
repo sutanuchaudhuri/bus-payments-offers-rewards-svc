@@ -1,0 +1,18 @@
+meta {
+  name: Get Customer Details
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{api_base}}/customers/1
+}
+
+tests {
+  test("should return customer details", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property("id");
+    expect(res.getBody()).to.have.property("email");
+    expect(res.getBody()).to.have.property("first_name");
+  });
+}

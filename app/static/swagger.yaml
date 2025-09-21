@@ -1,0 +1,2700 @@
+openapi: 3.0.0
+info:
+  title: Bus Payments & Rewards API
+  description: Comprehensive API for bus payment system with offers, rewards, bookings, and refunds
+  version: 1.0.0
+servers:
+  - url: http://localhost:{port}
+    description: Local development server
+    variables:
+      port:
+        default: '5006'
+        description: Server port number
+components:
+  schemas:
+    MerchantCategory:
+      type: string
+      enum:
+        - RESTAURANT
+        - RETAIL_STORE
+        - GAS_STATION
+        - AIRLINE
+        - HOTEL
+        - E_COMMERCE
+        - GROCERY_STORE
+        - PHARMACY
+        - ENTERTAINMENT_VENUE
+        - HEALTHCARE_PROVIDER
+        - TELECOM_PROVIDER
+        - UTILITY_COMPANY
+        - INSURANCE_COMPANY
+        - EDUCATIONAL_INSTITUTION
+        - AUTOMOTIVE_SERVICE
+        - HOME_IMPROVEMENT
+        - FASHION_RETAILER
+        - ELECTRONICS_STORE
+        - SUBSCRIPTION_SERVICE
+        - FINANCIAL_SERVICE
+        - FITNESS_CENTER
+    CreditCardProduct:
+      type: string
+      enum:
+        - BASIC
+        - SILVER
+        - GOLD
+        - PLATINUM
+    PaymentStatus:
+      type: string
+      enum:
+        - PENDING
+        - COMPLETED
+        - FAILED
+        - REFUNDED
+    RefundType:
+      type: string
+      enum:
+        - booking_cancellation
+        - dispute_resolution
+        - goodwill
+    RefundStatus:
+      type: string
+      enum:
+        - REQUESTED
+        - APPROVED
+        - DENIED
+        - PROCESSED
+        - COMPLETED
+        - CANCELLED
+    BookingStatus:
+      type: string
+      enum:
+        - CONFIRMED
+        - CANCELLED
+        - COMPLETED
+        - REFUNDED
+    RewardStatus:
+      type: string
+      enum:
+        - EARNED
+        - REDEEMED
+        - EXPIRED
+    OfferCategory:
+      type: string
+      enum:
+        - TRAVEL
+        - MERCHANT
+        - CASHBACK
+        - DINING
+        - FUEL
+        - SHOPPING
+
+paths:
+  # Health and General
+  /api/health:
+    get:
+      tags:
+        - General
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /:
+    get:
+      tags:
+        - General
+      summary: API information
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  version:
+                    type: string
+                  docs:
+                    type: string
+                  health:
+                    type: string
+
+  # Customer Management
+  /api/customers:
+    get:
+      tags:
+        - Customers
+      summary: List all customers
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customers:
+                    type: array
+                    items:
+                      type: object
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+                  per_page:
+                    type: integer
+    post:
+      tags:
+        - Customers
+      summary: Create new customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                address:
+                  type: string
+              required:
+                - first_name
+                - last_name
+                - email
+      responses:
+        '201':
+          description: Customer created successfully
+        '400':
+          description: Invalid data
+        '409':
+          description: Email already exists
+
+  /api/customers/{customer_id}:
+    get:
+      tags:
+        - Customers
+      summary: Get customer details
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer details
+        '404':
+          description: Customer not found
+    put:
+      tags:
+        - Customers
+      summary: Update customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                address:
+                  type: string
+      responses:
+        '200':
+          description: Customer updated successfully
+        '400':
+          description: Invalid data
+        '404':
+          description: Customer not found
+    delete:
+      tags:
+        - Customers
+      summary: Delete customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer deleted successfully
+        '404':
+          description: Customer not found
+
+  /api/customers/{customer_id}/credit-cards:
+    get:
+      tags:
+        - Credit Cards
+      summary: Get customer credit cards
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of customer credit cards
+        '404':
+          description: Customer not found
+    post:
+      tags:
+        - Credit Cards
+      summary: Add credit card to customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                card_number:
+                  type: string
+                card_holder_name:
+                  type: string
+                expiry_month:
+                  type: integer
+                  minimum: 1
+                  maximum: 12
+                expiry_year:
+                  type: integer
+                product_type:
+                  $ref: '#/components/schemas/CreditCardProduct'
+                credit_limit:
+                  type: number
+                  format: float
+                  minimum: 0
+                is_active:
+                  type: boolean
+                  default: true
+              required:
+                - card_number
+                - card_holder_name
+                - expiry_month
+                - expiry_year
+                - product_type
+                - credit_limit
+      responses:
+        '201':
+          description: Credit card added successfully
+        '400':
+          description: Invalid data
+        '409':
+          description: Card number already exists
+
+  /api/customers/{customer_id}/credit-cards/{card_id}:
+    put:
+      tags:
+        - Credit Cards
+      summary: Update credit card
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: card_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                card_holder_name:
+                  type: string
+                expiry_month:
+                  type: integer
+                expiry_year:
+                  type: integer
+                product_type:
+                  $ref: '#/components/schemas/CreditCardProduct'
+                credit_limit:
+                  type: number
+                available_credit:
+                  type: number
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Credit card updated successfully
+        '400':
+          description: Invalid data
+        '404':
+          description: Credit card not found
+    delete:
+      tags:
+        - Credit Cards
+      summary: Delete credit card
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: card_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Credit card deleted successfully
+        '404':
+          description: Credit card not found
+
+  # Payment Processing
+  /api/payments:
+    get:
+      tags:
+        - Payments
+      summary: List payments
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/PaymentStatus'
+        - in: query
+          name: merchant_name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of payments
+    post:
+      tags:
+        - Payments
+      summary: Make a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credit_card_id:
+                  type: integer
+                amount:
+                  type: number
+                  format: float
+                  minimum: 0.01
+                merchant_name:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+              required:
+                - credit_card_id
+                - amount
+                - merchant_name
+      responses:
+        '201':
+          description: Payment processed successfully
+        '400':
+          description: Invalid data or insufficient credit
+        '404':
+          description: Credit card not found
+
+  /api/payments/{payment_id}:
+    get:
+      tags:
+        - Payments
+      summary: Get payment details
+      parameters:
+        - in: path
+          name: payment_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Payment details
+        '404':
+          description: Payment not found
+
+  /api/payments/customer/{customer_id}:
+    get:
+      tags:
+        - Payments
+      summary: Get customer payments
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Customer payment history
+
+  /api/payments/{payment_id}/refund:
+    post:
+      tags:
+        - Payments
+      summary: Refund a payment
+      parameters:
+        - in: path
+          name: payment_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: float
+      responses:
+        '200':
+          description: Payment refunded successfully
+        '400':
+          description: Cannot refund payment
+        '404':
+          description: Payment not found
+
+  /api/payments/analytics/spending:
+    get:
+      tags:
+        - Payments
+      summary: Get spending analytics
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: group_by
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: month
+      responses:
+        '200':
+          description: Spending analytics data
+
+  # Merchant Management
+  /api/merchants:
+    get:
+      tags:
+        - Merchants
+      summary: List all merchants
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: category
+          schema:
+            $ref: '#/components/schemas/MerchantCategory'
+        - in: query
+          name: name
+          schema:
+            type: string
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of merchants
+        '400':
+          description: Invalid category
+    post:
+      tags:
+        - Merchants
+      summary: Create new merchant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                merchant_id:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                category:
+                  $ref: '#/components/schemas/MerchantCategory'
+                website:
+                  type: string
+                contact_email:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+                is_active:
+                  type: boolean
+                  default: true
+              required:
+                - merchant_id
+                - name
+                - category
+      responses:
+        '201':
+          description: Merchant created successfully
+        '400':
+          description: Invalid data
+        '409':
+          description: Merchant ID already exists
+
+  /api/merchants/{merchant_id}:
+    get:
+      tags:
+        - Merchants
+      summary: Get merchant details
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Merchant details
+        '404':
+          description: Merchant not found
+    put:
+      tags:
+        - Merchants
+      summary: Update merchant
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                merchant_id:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                category:
+                  $ref: '#/components/schemas/MerchantCategory'
+                website:
+                  type: string
+                contact_email:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Merchant updated successfully
+        '400':
+          description: Invalid data
+        '404':
+          description: Merchant not found
+    delete:
+      tags:
+        - Merchants
+      summary: Delete merchant
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Merchant deleted successfully
+        '400':
+          description: Cannot delete merchant with active offers or transactions
+        '404':
+          description: Merchant not found
+
+  /api/merchants/{merchant_id}/offers:
+    get:
+      tags:
+        - Merchants
+      summary: Get merchant offers
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+        - in: query
+          name: category
+          schema:
+            $ref: '#/components/schemas/OfferCategory'
+      responses:
+        '200':
+          description: List of merchant offers
+        '404':
+          description: Merchant not found
+
+  /api/merchants/{merchant_id}/history:
+    get:
+      tags:
+        - Merchants
+      summary: Get merchant offer history
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: offer_id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Merchant offer usage history
+        '404':
+          description: Merchant not found
+
+  /api/merchants/{merchant_id}/analytics:
+    get:
+      tags:
+        - Merchants
+      summary: Get merchant analytics
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Merchant analytics data
+        '404':
+          description: Merchant not found
+
+  /api/merchants/categories:
+    get:
+      tags:
+        - Merchants
+      summary: Get all merchant categories
+      responses:
+        '200':
+          description: List of merchant categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          $ref: '#/components/schemas/MerchantCategory'
+                        description:
+                          type: string
+
+  # Offer Management
+  /api/offers:
+    get:
+      tags:
+        - Offers
+      summary: List offers
+      description: Get all offers with optional filtering parameters. All query parameters are optional.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+          required: false
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+          description: Number of offers per page
+          required: false
+        - in: query
+          name: category
+          schema:
+            $ref: '#/components/schemas/OfferCategory'
+          description: Filter offers by category
+          required: false
+        - in: query
+          name: merchant_id
+          schema:
+            type: integer
+          description: Filter offers by merchant ID
+          required: false
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+          description: Filter offers by active status
+          required: false
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          description: Include customer-specific offer data (activation status, usage count)
+          required: false
+      responses:
+        '200':
+          description: List of offers with pagination information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  offers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        category:
+                          $ref: '#/components/schemas/OfferCategory'
+                        merchant_id:
+                          type: integer
+                        merchant_name:
+                          type: string
+                        merchant_category:
+                          type: string
+                        discount_percentage:
+                          type: number
+                        max_discount_amount:
+                          type: number
+                        min_transaction_amount:
+                          type: number
+                        reward_points:
+                          type: integer
+                        start_date:
+                          type: string
+                          format: date-time
+                        expiry_date:
+                          type: string
+                          format: date-time
+                        terms_and_conditions:
+                          type: string
+                        is_active:
+                          type: boolean
+                        max_usage_per_customer:
+                          type: integer
+                        created_at:
+                          type: string
+                          format: date-time
+                        customer_activated:
+                          type: boolean
+                          description: Only present when customer_id is provided
+                        activation_date:
+                          type: string
+                          format: date-time
+                          description: Only present when customer_id is provided and offer is activated
+                        used_count:
+                          type: integer
+                          description: Only present when customer_id is provided and offer is activated
+                  total:
+                    type: integer
+                    description: Total number of offers
+                  pages:
+                    type: integer
+                    description: Total number of pages
+                  current_page:
+                    type: integer
+                    description: Current page number
+                  per_page:
+                    type: integer
+                    description: Number of offers per page
+        '400':
+          description: Invalid category or other validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    post:
+      tags:
+        - Offers
+      summary: Create new offer
+      description: Create a new offer with the specified details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Offer title
+                description:
+                  type: string
+                  description: Offer description
+                category:
+                  $ref: '#/components/schemas/OfferCategory'
+                  description: Offer category
+                merchant_id:
+                  type: integer
+                  description: Associated merchant ID
+                merchant_name:
+                  type: string
+                  description: Merchant name (deprecated, use merchant_id)
+                discount_percentage:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 100
+                  description: Discount percentage (0-100)
+                max_discount_amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                  description: Maximum discount amount
+                min_transaction_amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                  description: Minimum transaction amount to qualify
+                reward_points:
+                  type: integer
+                  default: 0
+                  description: Reward points for this offer
+                start_date:
+                  type: string
+                  format: date-time
+                  description: Offer start date
+                expiry_date:
+                  type: string
+                  format: date-time
+                  description: Offer expiry date
+                terms_and_conditions:
+                  type: string
+                  description: Terms and conditions
+                is_active:
+                  type: boolean
+                  default: true
+                  description: Whether the offer is active
+                max_usage_per_customer:
+                  type: integer
+                  default: 1
+                  description: Maximum times a customer can use this offer
+              required:
+                - title
+                - category
+                - start_date
+                - expiry_date
+      responses:
+        '201':
+          description: Offer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  category:
+                    $ref: '#/components/schemas/OfferCategory'
+                  merchant_id:
+                    type: integer
+                  merchant_name:
+                    type: string
+                  discount_percentage:
+                    type: number
+                  max_discount_amount:
+                    type: number
+                  min_transaction_amount:
+                    type: number
+                  reward_points:
+                    type: integer
+                  start_date:
+                    type: string
+                    format: date-time
+                  expiry_date:
+                    type: string
+                    format: date-time
+                  terms_and_conditions:
+                    type: string
+                  is_active:
+                    type: boolean
+                  max_usage_per_customer:
+                    type: integer
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid data or validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/{offer_id}:
+    get:
+      tags:
+        - Offers
+      summary: Get specific offer
+      description: Get details of a specific offer by ID including activation statistics
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Offer details with statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  category:
+                    $ref: '#/components/schemas/OfferCategory'
+                  merchant_id:
+                    type: integer
+                  merchant_name:
+                    type: string
+                  merchant_category:
+                    type: string
+                  discount_percentage:
+                    type: number
+                  max_discount_amount:
+                    type: number
+                  min_transaction_amount:
+                    type: number
+                  reward_points:
+                    type: integer
+                  start_date:
+                    type: string
+                    format: date-time
+                  expiry_date:
+                    type: string
+                    format: date-time
+                  terms_and_conditions:
+                    type: string
+                  is_active:
+                    type: boolean
+                  max_usage_per_customer:
+                    type: integer
+                  created_at:
+                    type: string
+                    format: date-time
+                  statistics:
+                    type: object
+                    properties:
+                      total_activations:
+                        type: integer
+                        description: Total number of customer activations
+                      active_activations:
+                        type: integer
+                        description: Number of currently active activations
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      tags:
+        - Offers
+      summary: Update offer
+      description: Update an existing offer with new details
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Offer title
+                description:
+                  type: string
+                  description: Offer description
+                category:
+                  $ref: '#/components/schemas/OfferCategory'
+                  description: Offer category
+                merchant_id:
+                  type: integer
+                  description: Associated merchant ID
+                merchant_name:
+                  type: string
+                  description: Merchant name
+                discount_percentage:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 100
+                  description: Discount percentage (0-100)
+                max_discount_amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                  description: Maximum discount amount
+                min_transaction_amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                  description: Minimum transaction amount to qualify
+                reward_points:
+                  type: integer
+                  description: Reward points for this offer
+                start_date:
+                  type: string
+                  format: date-time
+                  description: Offer start date
+                expiry_date:
+                  type: string
+                  format: date-time
+                  description: Offer expiry date
+                terms_and_conditions:
+                  type: string
+                  description: Terms and conditions
+                is_active:
+                  type: boolean
+                  description: Whether the offer is active
+                max_usage_per_customer:
+                  type: integer
+                  description: Maximum times a customer can use this offer
+              description: All fields are optional for update
+      responses:
+        '200':
+          description: Offer updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  category:
+                    $ref: '#/components/schemas/OfferCategory'
+                  merchant_id:
+                    type: integer
+                  merchant_name:
+                    type: string
+                  discount_percentage:
+                    type: number
+                  max_discount_amount:
+                    type: number
+                  min_transaction_amount:
+                    type: number
+                  reward_points:
+                    type: integer
+                  start_date:
+                    type: string
+                    format: date-time
+                  expiry_date:
+                    type: string
+                    format: date-time
+                  terms_and_conditions:
+                    type: string
+                  is_active:
+                    type: boolean
+                  max_usage_per_customer:
+                    type: integer
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid data or validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      tags:
+        - Offers
+      summary: Delete offer
+      description: Delete an offer (only allowed if no active customer activations exist)
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Offer deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Cannot delete offer with active customer activations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/{offer_id}/activate:
+    post:
+      tags:
+        - Offers
+      summary: Activate offer for customer
+      description: Activate an offer for a specific customer
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                  description: Customer ID to activate the offer for
+              required:
+                - customer_id
+      responses:
+        '201':
+          description: Offer activated successfully for customer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+                  offer_id:
+                    type: integer
+                  activation_date:
+                    type: string
+                    format: date-time
+                  usage_count:
+                    type: integer
+                  total_savings:
+                    type: number
+                  is_active:
+                    type: boolean
+        '400':
+          description: Offer not active, expired, or not started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Offer or customer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '409':
+          description: Offer already activated for this customer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/{offer_id}/deactivate:
+    post:
+      tags:
+        - Offers
+      summary: Deactivate offer
+      description: Deactivate an offer (sets is_active to false)
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Offer deactivated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  offer:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      title:
+                        type: string
+                      is_active:
+                        type: boolean
+                      # ... other offer properties
+        '400':
+          description: Offer is already inactive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/{offer_id}/reactivate:
+    post:
+      tags:
+        - Offers
+      summary: Reactivate offer
+      description: Reactivate a deactivated offer (sets is_active to true, only if not expired)
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Offer reactivated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  offer:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      title:
+                        type: string
+                      is_active:
+                        type: boolean
+                      # ... other offer properties
+        '400':
+          description: Offer is already active or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/{offer_id}/expire:
+    post:
+      tags:
+        - Offers
+      summary: Expire offer
+      description: Manually expire an offer by setting its expiry date to current time and deactivating it
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Offer expired successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  offer:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      title:
+                        type: string
+                      expiry_date:
+                        type: string
+                        format: date-time
+                      is_active:
+                        type: boolean
+                      # ... other offer properties
+        '400':
+          description: Offer is already expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/categories:
+    get:
+      tags:
+        - Offers
+      summary: Get all offer categories
+      description: Get all available offer categories with descriptions
+      responses:
+        '200':
+          description: List of offer categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Category name
+                        value:
+                          $ref: '#/components/schemas/OfferCategory'
+                          description: Category value
+                        description:
+                          type: string
+                          description: Category description
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  # Refund System Management
+  /api/refunds/request:
+    post:
+      tags:
+        - Refunds
+      summary: Request a refund
+      description: Submit a refund request for booking cancellation, dispute resolution, or goodwill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refund_type:
+                  type: string
+                  enum: [booking_cancellation, dispute_resolution, goodwill]
+                refund_amount:
+                  type: number
+                  format: float
+                  minimum: 0.01
+                reason:
+                  type: string
+                booking_id:
+                  type: integer
+                payment_id:
+                  type: integer
+              required:
+                - refund_type
+                - refund_amount
+                - reason
+      responses:
+        '201':
+          description: Refund request created successfully
+        '400':
+          description: Invalid data
+        '404':
+          description: Related booking or payment not found
+        '500':
+          description: Internal server error
+
+  /api/refunds:
+    get:
+      tags:
+        - Refunds
+      summary: List refunds
+      description: Get all refund requests with optional filtering
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/RefundStatus'
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+        - in: query
+          name: refund_type
+          schema:
+            type: string
+            enum: [booking_cancellation, dispute_resolution, goodwill]
+      responses:
+        '200':
+          description: List of refunds with pagination
+        '500':
+          description: Internal server error
+
+  /api/refunds/{refund_id}:
+    get:
+      tags:
+        - Refunds
+      summary: Get refund details
+      parameters:
+        - in: path
+          name: refund_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Refund details
+        '404':
+          description: Refund not found
+        '500':
+          description: Internal server error
+
+  /api/refunds/{refund_id}/approve:
+    post:
+      tags:
+        - Refunds
+      summary: Approve refund
+      parameters:
+        - in: path
+          name: refund_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Refund approved successfully
+        '400':
+          description: Refund cannot be approved
+        '404':
+          description: Refund not found
+        '500':
+          description: Internal server error
+
+  /api/refunds/{refund_id}/deny:
+    post:
+      tags:
+        - Refunds
+      summary: Deny refund
+      parameters:
+        - in: path
+          name: refund_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                denial_reason:
+                  type: string
+      responses:
+        '200':
+          description: Refund denied successfully
+        '400':
+          description: Refund cannot be denied
+        '404':
+          description: Refund not found
+        '500':
+          description: Internal server error
+
+  /api/refunds/points/cancel:
+    post:
+      tags:
+        - Refunds
+      summary: Cancel points redemption
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                points_to_refund:
+                  type: integer
+                  minimum: 1
+                reason:
+                  type: string
+              required:
+                - customer_id
+                - points_to_refund
+                - reason
+      responses:
+        '201':
+          description: Points redemption cancelled and refunded successfully
+        '400':
+          description: Invalid data
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  # Card Token Management
+  /api/tokens/create:
+    post:
+      tags:
+        - Card Tokens
+      summary: Create card token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                card_id:
+                  type: integer
+                token_type:
+                  type: string
+                  enum: [SINGLE_USE, MULTI_USE, RECURRING]
+                  default: SINGLE_USE
+                expires_in_hours:
+                  type: integer
+                  minimum: 1
+                  maximum: 8760
+                  default: 24
+              required:
+                - card_id
+      responses:
+        '201':
+          description: Token created successfully
+        '400':
+          description: Invalid data
+        '404':
+          description: Credit card not found
+        '500':
+          description: Internal server error
+
+  /api/tokens/{token_id}:
+    get:
+      tags:
+        - Card Tokens
+      summary: Get token details
+      parameters:
+        - in: path
+          name: token_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token details
+        '404':
+          description: Token not found
+        '500':
+          description: Internal server error
+
+  /api/tokens/{token_id}/validate:
+    post:
+      tags:
+        - Card Tokens
+      summary: Validate token
+      parameters:
+        - in: path
+          name: token_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token is valid
+        '400':
+          description: Token is invalid or expired
+        '404':
+          description: Token not found
+        '500':
+          description: Internal server error
+
+  /api/tokens/{token_id}/deactivate:
+    post:
+      tags:
+        - Card Tokens
+      summary: Deactivate token
+      parameters:
+        - in: path
+          name: token_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token deactivated successfully
+        '404':
+          description: Token not found
+        '500':
+          description: Internal server error
+
+  /api/tokens/customer/{customer_id}:
+    get:
+      tags:
+        - Card Tokens
+      summary: Get customer tokens
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of customer tokens
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  /api/tokens/card/{card_id}/tokens:
+    get:
+      tags:
+        - Card Tokens
+      summary: Get card tokens
+      parameters:
+        - in: path
+          name: card_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of card tokens
+        '404':
+          description: Credit card not found
+        '500':
+          description: Internal server error
+
+  # Rewards Management
+  /api/rewards/customer/{customer_id}:
+    get:
+      tags:
+        - Rewards
+      summary: Get customer rewards
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/RewardStatus'
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: List of customer rewards
+        '400':
+          description: Invalid parameters
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  /api/rewards/{reward_id}:
+    get:
+      tags:
+        - Rewards
+      summary: Get specific reward
+      parameters:
+        - in: path
+          name: reward_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Reward details
+        '404':
+          description: Reward not found
+        '500':
+          description: Internal server error
+
+  /api/rewards:
+    post:
+      tags:
+        - Rewards
+      summary: Create manual reward
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                points_earned:
+                  type: integer
+                  minimum: 1
+                description:
+                  type: string
+                offer_id:
+                  type: integer
+                dollar_value:
+                  type: number
+                expiry_date:
+                  type: string
+                  format: date-time
+              required:
+                - customer_id
+                - points_earned
+                - description
+      responses:
+        '201':
+          description: Reward created successfully
+        '400':
+          description: Invalid data
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  /api/rewards/{reward_id}/redeem:
+    post:
+      tags:
+        - Rewards
+      summary: Redeem specific reward
+      parameters:
+        - in: path
+          name: reward_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                points:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Reward points redeemed successfully
+        '400':
+          description: Invalid redemption request
+        '404':
+          description: Reward not found
+        '500':
+          description: Internal server error
+
+  /api/rewards/customer/{customer_id}/redeem:
+    post:
+      tags:
+        - Rewards
+      summary: Redeem customer points
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                points:
+                  type: integer
+                  minimum: 1
+                description:
+                  type: string
+              required:
+                - points
+      responses:
+        '200':
+          description: Points redeemed successfully
+        '400':
+          description: Invalid redemption request or insufficient points
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  /api/rewards/customer/{customer_id}/balance:
+    get:
+      tags:
+        - Rewards
+      summary: Get customer balance
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer balance information
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  /api/rewards/customer/{customer_id}/history:
+    get:
+      tags:
+        - Rewards
+      summary: Get redemption history
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Redemption history
+        '400':
+          description: Invalid parameters
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal server error
+
+  /api/rewards/expire-check:
+    post:
+      tags:
+        - Rewards
+      summary: Expire rewards
+      responses:
+        '200':
+          description: Rewards expiry check completed
+        '500':
+          description: Internal server error
+
+  # Booking Management
+  /api/bookings/{booking_id}/status:
+    get:
+      tags:
+        - Bookings
+      summary: Get booking status
+      parameters:
+        - in: path
+          name: booking_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Booking status details
+        '404':
+          description: Booking not found
+        '500':
+          description: Internal server error
+
+  /api/bookings/{booking_id}/modify:
+    put:
+      tags:
+        - Bookings
+      summary: Modify booking
+      parameters:
+        - in: path
+          name: booking_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_booking_date:
+                  type: string
+                  format: date-time
+                modification_reason:
+                  type: string
+                additional_services:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Booking modified successfully
+        '400':
+          description: Invalid modification request
+        '404':
+          description: Booking not found
+        '500':
+          description: Internal server error
+
+  # Integration & Simulator Endpoints
+  /simulator/status:
+    get:
+      tags:
+        - Integration
+      summary: Get simulator status
+      responses:
+        '200':
+          description: Simulator status information
+        '500':
+          description: Internal server error
+
+  # Travel Integration
+  /offers/travel/airports:
+    get:
+      tags:
+        - Travel Integration
+      summary: Get available airports
+      responses:
+        '200':
+          description: List of airports
+
+  /offers/travel/search-flights:
+    post:
+      tags:
+        - Travel Integration
+      summary: Search flights
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                origin:
+                  type: string
+                destination:
+                  type: string
+                departure_date:
+                  type: string
+                  format: date
+                return_date:
+                  type: string
+                  format: date
+                passengers:
+                  type: integer
+                  minimum: 1
+                  default: 1
+              required:
+                - origin
+                - destination
+                - departure_date
+      responses:
+        '200':
+          description: Available flights
+
+  /offers/travel/book-flight:
+    post:
+      tags:
+        - Travel Integration
+      summary: Book flight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flight_id:
+                  type: string
+                customer_id:
+                  type: integer
+                passengers:
+                  type: array
+                  items:
+                    type: object
+              required:
+                - flight_id
+                - customer_id
+                - passengers
+      responses:
+        '201':
+          description: Flight booked successfully
+
+  /offers/travel/booking/{booking_reference}:
+    get:
+      tags:
+        - Travel Integration
+      summary: Get travel booking details
+      parameters:
+        - in: path
+          name: booking_reference
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking details
+
+  # Hotel Integration
+  /offers/hotel/cities:
+    get:
+      tags:
+        - Hotel Integration
+      summary: Get available cities
+      responses:
+        '200':
+          description: List of cities
+
+  /offers/hotel/search-hotels:
+    post:
+      tags:
+        - Hotel Integration
+      summary: Search hotels
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                city:
+                  type: string
+                check_in:
+                  type: string
+                  format: date
+                check_out:
+                  type: string
+                  format: date
+                guests:
+                  type: integer
+                  minimum: 1
+                  default: 1
+                rooms:
+                  type: integer
+                  minimum: 1
+                  default: 1
+              required:
+                - city
+                - check_in
+                - check_out
+      responses:
+        '200':
+          description: Available hotels
+
+  /offers/hotel/book-hotel:
+    post:
+      tags:
+        - Hotel Integration
+      summary: Book hotel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hotel_id:
+                  type: string
+                customer_id:
+                  type: integer
+                check_in:
+                  type: string
+                  format: date
+                check_out:
+                  type: string
+                  format: date
+                guests:
+                  type: array
+                  items:
+                    type: object
+                rooms:
+                  type: integer
+              required:
+                - hotel_id
+                - customer_id
+                - check_in
+                - check_out
+                - guests
+      responses:
+        '201':
+          description: Hotel booked successfully
+
+  /offers/hotel/booking/{booking_reference}:
+    get:
+      tags:
+        - Hotel Integration
+      summary: Get hotel booking details
+      parameters:
+        - in: path
+          name: booking_reference
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Hotel booking details
+
+  # Shopping Integration
+  /offers/shopping/categories:
+    get:
+      tags:
+        - Shopping Integration
+      summary: Get shopping categories
+      responses:
+        '200':
+          description: List of categories
+
+  /offers/shopping/brands:
+    get:
+      tags:
+        - Shopping Integration
+      summary: Get available brands
+      responses:
+        '200':
+          description: List of brands
+
+  /offers/shopping/search:
+    post:
+      tags:
+        - Shopping Integration
+      summary: Search products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                category:
+                  type: string
+                brand:
+                  type: string
+                min_price:
+                  type: number
+                max_price:
+                  type: number
+                page:
+                  type: integer
+                  default: 1
+                per_page:
+                  type: integer
+                  default: 20
+      responses:
+        '200':
+          description: Search results
+
+  /offers/shopping/product/{product_id}:
+    get:
+      tags:
+        - Shopping Integration
+      summary: Get product details
+      parameters:
+        - in: path
+          name: product_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product details
+
+  /offers/shopping/add-to-cart:
+    post:
+      tags:
+        - Shopping Integration
+      summary: Add product to cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                product_id:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+                  default: 1
+              required:
+                - customer_id
+                - product_id
+      responses:
+        '200':
+          description: Product added to cart
+
+  /offers/shopping/create-order:
+    post:
+      tags:
+        - Shopping Integration
+      summary: Create shopping order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                shipping_address:
+                  type: object
+                payment_method:
+                  type: string
+                  enum: [credit_card, points]
+              required:
+                - customer_id
+                - shipping_address
+                - payment_method
+      responses:
+        '201':
+          description: Order created successfully
+
+  /offers/shopping/order/{order_id}:
+    get:
+      tags:
+        - Shopping Integration
+      summary: Get order details
+      parameters:
+        - in: path
+          name: order_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+
+  /offers/search/travel-package:
+    post:
+      tags:
+        - Travel Integration
+      summary: Search travel packages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                origin:
+                  type: string
+                destination:
+                  type: string
+                departure_date:
+                  type: string
+                  format: date
+                return_date:
+                  type: string
+                  format: date
+                passengers:
+                  type: integer
+                  minimum: 1
+                rooms:
+                  type: integer
+                  minimum: 1
+              required:
+                - origin
+                - destination
+                - departure_date
+                - return_date
+      responses:
+        '200':
+          description: Available travel packages

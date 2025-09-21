@@ -1,0 +1,21 @@
+meta {
+  name: List Payments
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{api_base}}/payments?customer_id=1
+}
+
+params:query {
+  customer_id: 1
+}
+
+tests {
+  test("should return payments list", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property("payments");
+    expect(res.getBody().payments).to.be.an("array");
+  });
+}

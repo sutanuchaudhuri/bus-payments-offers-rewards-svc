@@ -1,0 +1,18 @@
+meta {
+  name: Get Reward Balance
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{api_base}}/rewards/customer/1/balance
+}
+
+tests {
+  test("should return reward balance", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property("total_points");
+    expect(res.getBody()).to.have.property("available_points");
+    expect(res.getBody()).to.have.property("dollar_value");
+  });
+}

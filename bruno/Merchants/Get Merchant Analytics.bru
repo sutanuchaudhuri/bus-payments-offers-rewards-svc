@@ -1,0 +1,18 @@
+meta {
+  name: Get Merchant Analytics
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{api_base}}/merchants/1/analytics
+}
+
+tests {
+  test("should return merchant analytics", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property("total_transactions");
+    expect(res.getBody()).to.have.property("total_amount");
+    expect(res.getBody()).to.have.property("total_discounts");
+  });
+}

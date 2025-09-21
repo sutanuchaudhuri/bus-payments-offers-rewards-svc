@@ -1,0 +1,33 @@
+meta {
+  name: Make Payment
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{api_base}}/payments
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "credit_card_id": 1,
+    "amount": 150.00,
+    "merchant_name": "Starbucks",
+    "merchant_category": "RESTAURANT",
+    "description": "Coffee and pastries"
+  }
+}
+
+tests {
+  test("should process payment successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody()).to.have.property("payment");
+    expect(res.getBody().payment).to.have.property("id");
+    expect(res.getBody().payment.amount).to.equal(150);
+  });
+}

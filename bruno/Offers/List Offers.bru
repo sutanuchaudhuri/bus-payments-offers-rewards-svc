@@ -1,0 +1,17 @@
+meta {
+  name: List Offers
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{api_base}}/offers
+}
+
+tests {
+  test("should return offers list", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property("offers");
+    expect(res.getBody().offers).to.be.an("array");
+  });
+}

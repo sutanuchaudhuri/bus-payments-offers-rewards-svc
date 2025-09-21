@@ -1,0 +1,23 @@
+meta {
+  name: List Customers
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{api_base}}/customers?page=1&per_page=10
+}
+
+params:query {
+  page: 1
+  per_page: 10
+}
+
+tests {
+  test("should return customers list", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property("customers");
+    expect(res.getBody()).to.have.property("total");
+    expect(res.getBody().customers).to.be.an("array");
+  });
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Activate Offer
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{api_base}}/offers/1/activate
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "customer_id": 1
+  }
+}
+
+tests {
+  test("should activate offer successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody()).to.have.property("message");
+    expect(res.getBody().message).to.include("activated");
+  });
+}

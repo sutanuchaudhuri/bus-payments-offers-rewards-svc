@@ -1,0 +1,33 @@
+meta {
+  name: Create Customer
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{api_base}}/customers
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1-555-0123",
+    "date_of_birth": "1990-01-15",
+    "address": "123 Main St, Anytown, USA 12345"
+  }
+}
+
+tests {
+  test("should create customer successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody()).to.have.property("id");
+    expect(res.getBody().email).to.equal("john.doe@example.com");
+  });
+}

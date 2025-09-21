@@ -1,0 +1,29 @@
+meta {
+  name: Redeem Points
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{api_base}}/rewards/customer/1/redeem
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "points": 100,
+    "description": "Test point redemption"
+  }
+}
+
+tests {
+  test("should redeem points successfully", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property("message");
+    expect(res.getBody().message).to.include("redeemed");
+  });
+}

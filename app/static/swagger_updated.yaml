@@ -1,0 +1,466 @@
+openapi: 3.0.0
+info:
+  title: Bus Payments & Rewards API
+  description: Comprehensive API for bus payment system with offers, rewards, bookings, and refunds
+  version: 1.0.0
+servers:
+  - url: http://localhost:{port}
+    description: Local development server
+    variables:
+      port:
+        default: '5006'
+        description: Server port number
+components:
+  schemas:
+    OfferCategory:
+      type: string
+      enum:
+        - TRAVEL
+        - MERCHANT
+        - CASHBACK
+        - DINING
+        - FUEL
+        - SHOPPING
+
+paths:
+  # Offer Management - Updated with customer_id requirements
+  /api/offers:
+    get:
+      tags:
+        - Offers
+      summary: List offers
+      description: Get all offers with filtering options. customer_id is required for personalized offer data.
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          description: Customer ID (required) - used to include customer-specific offer data
+          required: true
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+          required: false
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+          description: Number of offers per page
+          required: false
+        - in: query
+          name: category
+          schema:
+            $ref: '#/components/schemas/OfferCategory'
+          description: Filter offers by category
+          required: false
+        - in: query
+          name: merchant_id
+          schema:
+            type: integer
+          description: Filter offers by merchant ID
+          required: false
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+          description: Filter offers by active status
+          required: false
+      responses:
+        '200':
+          description: List of offers with pagination information and customer-specific data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  offers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        category:
+                          $ref: '#/components/schemas/OfferCategory'
+                        merchant_id:
+                          type: integer
+                        merchant_name:
+                          type: string
+                        discount_percentage:
+                          type: number
+                        max_discount_amount:
+                          type: number
+                        min_transaction_amount:
+                          type: number
+                        reward_points:
+                          type: integer
+                        start_date:
+                          type: string
+                          format: date-time
+                        expiry_date:
+                          type: string
+                          format: date-time
+                        terms_and_conditions:
+                          type: string
+                        is_active:
+                          type: boolean
+                        max_usage_per_customer:
+                          type: integer
+                        created_at:
+                          type: string
+                          format: date-time
+                        customer_activated:
+                          type: boolean
+                          description: Whether the customer has activated this offer
+                        customer_id:
+                          type: integer
+                          description: Customer ID used for this request
+                        activation_date:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          description: Date when customer activated the offer (null if not activated)
+                        used_count:
+                          type: integer
+                          description: Number of times customer has used this offer
+                        total_savings:
+                          type: number
+                          description: Total savings achieved by customer from this offer
+                  total:
+                    type: integer
+                    description: Total number of offers
+                  pages:
+                    type: integer
+                    description: Total number of pages
+                  current_page:
+                    type: integer
+                    description: Current page number
+                  per_page:
+                    type: integer
+                    description: Number of offers per page
+                  customer_id:
+                    type: integer
+                    description: Customer ID used for this request
+        '400':
+          description: Missing customer_id or invalid category
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/{offer_id}:
+    get:
+      tags:
+        - Offers
+      summary: Get specific offer
+      description: Get details of a specific offer by ID including activation statistics - customer_id is required
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          description: Customer ID (required) - used to include customer-specific offer data
+          required: true
+      responses:
+        '200':
+          description: Offer details with statistics and customer-specific data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  category:
+                    $ref: '#/components/schemas/OfferCategory'
+                  merchant_id:
+                    type: integer
+                  merchant_name:
+                    type: string
+                  discount_percentage:
+                    type: number
+                  max_discount_amount:
+                    type: number
+                  min_transaction_amount:
+                    type: number
+                  reward_points:
+                    type: integer
+                  start_date:
+                    type: string
+                    format: date-time
+                  expiry_date:
+                    type: string
+                    format: date-time
+                  terms_and_conditions:
+                    type: string
+                  is_active:
+                    type: boolean
+                  max_usage_per_customer:
+                    type: integer
+                  created_at:
+                    type: string
+                    format: date-time
+                  statistics:
+                    type: object
+                    properties:
+                      total_activations:
+                        type: integer
+                        description: Total number of customer activations
+                      active_activations:
+                        type: integer
+                        description: Number of currently active activations
+                  customer_activated:
+                    type: boolean
+                    description: Whether the customer has activated this offer
+                  customer_id:
+                    type: integer
+                    description: Customer ID used for this request
+                  activation_date:
+                    type: string
+                    format: date-time
+                    nullable: true
+                    description: Date when customer activated the offer (null if not activated)
+                  used_count:
+                    type: integer
+                    description: Number of times customer has used this offer
+                  total_savings:
+                    type: number
+                    description: Total savings achieved by customer from this offer
+        '400':
+          description: Missing customer_id or invalid offer ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Offer or customer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/categories:
+    get:
+      tags:
+        - Offers
+      summary: Get all offer categories
+      description: Get all available offer categories with descriptions - customer_id is required
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          description: Customer ID (required) for consistency with other offer endpoints
+          required: true
+      responses:
+        '200':
+          description: List of offer categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Category name
+                        value:
+                          $ref: '#/components/schemas/OfferCategory'
+                          description: Category value
+                        description:
+                          type: string
+                          description: Category description
+                  customer_id:
+                    type: integer
+                    description: Customer ID used for this request
+        '400':
+          description: Missing customer_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/offers/{offer_id}/activate:
+    post:
+      tags:
+        - Offers
+      summary: Activate offer for customer
+      description: Activate an offer for a specific customer
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                  description: Customer ID to activate the offer for
+              required:
+                - customer_id
+      responses:
+        '201':
+          description: Offer activated successfully for customer
+        '400':
+          description: Offer not active, expired, or not started
+        '404':
+          description: Offer or customer not found
+        '409':
+          description: Offer already activated for this customer
+        '500':
+          description: Internal server error
+
+  /api/offers/{offer_id}/deactivate:
+    post:
+      tags:
+        - Offers
+      summary: Deactivate offer
+      description: Deactivate an offer (sets is_active to false)
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Offer deactivated successfully
+        '400':
+          description: Offer is already inactive
+        '404':
+          description: Offer not found
+        '500':
+          description: Internal server error
+
+  /api/offers/{offer_id}/reactivate:
+    post:
+      tags:
+        - Offers
+      summary: Reactivate offer
+      description: Reactivate a deactivated offer (sets is_active to true, only if not expired)
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Offer reactivated successfully
+        '400':
+          description: Offer is already active or expired
+        '404':
+          description: Offer not found
+        '500':
+          description: Internal server error
+
+  /api/offers/{offer_id}/expire:
+    post:
+      tags:
+        - Offers
+      summary: Expire offer
+      description: Manually expire an offer by setting its expiry date to current time and deactivating it
+      parameters:
+        - in: path
+          name: offer_id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Offer expired successfully
+        '400':
+          description: Offer is already expired
+        '404':
+          description: Offer not found
+        '500':
+          description: Internal server error

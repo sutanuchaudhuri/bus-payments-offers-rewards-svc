@@ -1,0 +1,17 @@
+meta {
+  name: Get Customer Rewards
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{api_base}}/rewards/customer/1
+}
+
+tests {
+  test("should return customer rewards", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property("rewards");
+    expect(res.getBody().rewards).to.be.an("array");
+  });
+}
