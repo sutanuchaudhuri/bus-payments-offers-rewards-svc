@@ -45,7 +45,7 @@ class BulkCustomerSetupManager:
                 "name": "Regular Shopper",
                 "spending_range": (100, 800),
                 "transaction_frequency": "medium",  # 8-15 per month
-                "preferred_categories": [MerchantCategory.RESTAURANT, MerchantCategory.GROCERY_STORE, MerchantCategory.RETAIL],
+                "preferred_categories": [MerchantCategory.RESTAURANT, MerchantCategory.GROCERY_STORE, MerchantCategory.RETAIL_STORE],
                 "card_types": [CreditCardProduct.SILVER, CreditCardProduct.GOLD],
                 "credit_limit_range": (5000, 12000)
             },
@@ -61,7 +61,7 @@ class BulkCustomerSetupManager:
                 "name": "Luxury Spender",
                 "spending_range": (500, 5000),
                 "transaction_frequency": "high",  # 20-35 per month
-                "preferred_categories": [MerchantCategory.AIRLINE, MerchantCategory.HOTEL, MerchantCategory.RETAIL],
+                "preferred_categories": [MerchantCategory.AIRLINE, MerchantCategory.HOTEL, MerchantCategory.RETAIL_STORE],
                 "card_types": [CreditCardProduct.PLATINUM],
                 "credit_limit_range": (15000, 50000)
             },
@@ -77,7 +77,7 @@ class BulkCustomerSetupManager:
                 "name": "Tech Professional",
                 "spending_range": (200, 1500),
                 "transaction_frequency": "medium",  # 12-18 per month
-                "preferred_categories": [MerchantCategory.RETAIL, MerchantCategory.RESTAURANT, MerchantCategory.ONLINE],
+                "preferred_categories": [MerchantCategory.RETAIL_STORE, MerchantCategory.RESTAURANT, MerchantCategory.E_COMMERCE],
                 "card_types": [CreditCardProduct.GOLD, CreditCardProduct.PLATINUM],
                 "credit_limit_range": (8000, 20000)
             },
@@ -85,7 +85,7 @@ class BulkCustomerSetupManager:
                 "name": "Young Professional",
                 "spending_range": (80, 600),
                 "transaction_frequency": "medium",  # 8-12 per month
-                "preferred_categories": [MerchantCategory.RESTAURANT, MerchantCategory.ENTERTAINMENT, MerchantCategory.RETAIL],
+                "preferred_categories": [MerchantCategory.RESTAURANT, MerchantCategory.ENTERTAINMENT_VENUE, MerchantCategory.RETAIL_STORE],
                 "card_types": [CreditCardProduct.SILVER, CreditCardProduct.GOLD],
                 "credit_limit_range": (3000, 10000)
             },
@@ -273,14 +273,14 @@ class BulkCustomerSetupManager:
                 for card_idx in range(num_cards):
                     # Select card type
                     card_type = random.choice(profile["card_types"])
-                    card_brand = random.choice([CardType.VISA, CardType.MASTERCARD, CardType.AMEX])
+                    card_brand = random.choice([CardType.VISA, CardType.MASTERCARD, CardType.AMERICAN_EXPRESS])
 
                     # Generate card number based on brand
                     if card_brand == CardType.VISA:
                         card_number = f"4{random.randint(100000000000000, 999999999999999)}"
                     elif card_brand == CardType.MASTERCARD:
                         card_number = f"5{random.randint(100000000000000, 999999999999999)}"
-                    else:  # AMEX
+                    else:  # AMERICAN_EXPRESS
                         card_number = f"3{random.randint(10000000000000, 99999999999999)}"
 
                     # Ensure unique card number
@@ -590,8 +590,8 @@ class BulkCustomerSetupManager:
         """Map merchant category to offer category"""
         mapping = {
             MerchantCategory.AIRLINE: OfferCategory.TRAVEL,
-            MerchantCategory.HOTEL: OfferCategory.TRAVEL,
-            MerchantCategory.RESTAURANT: OfferCategory.DINING,
+            MerchantCategory.RETAIL_STORE: OfferCategory.SHOPPING,
+            MerchantCategory.ENTERTAINMENT_VENUE: OfferCategory.ENTERTAINMENT,
             MerchantCategory.GROCERY_STORE: OfferCategory.SHOPPING,
             MerchantCategory.GAS_STATION: OfferCategory.AUTOMOTIVE,
             MerchantCategory.RETAIL: OfferCategory.SHOPPING,
