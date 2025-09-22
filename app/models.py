@@ -84,6 +84,7 @@ class MerchantCategory(Enum):
 
 # Merchant Model
 class Merchant(db.Model):
+    CAB_RENTAL = "CAB_RENTAL"
     __tablename__ = 'merchants'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -217,24 +218,30 @@ class Payment(db.Model):
     __tablename__ = 'payments'
     
     id = db.Column(db.Integer, primary_key=True)
+    credit_card_id = db.Column(db.Integer, db.ForeignKey('credit_cards.id'), nullable=False)
+    amount = db.Column(Numeric(10, 2), nullable=False)
+    merchant_name = db.Column(db.String(200), nullable=False)
+    merchant_category = db.Column(db.String(100))
+    transaction_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(SQLAlchemyEnum(PaymentStatus), default=PaymentStatus.PENDING)
+    reference_number = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def to_dict_with_token(self, token_id=None):
-        """Return card details with token information for secure API responses"""
+    def to_dict(self):
         return {
-            'token_id': token_id,
-            'first_six': self.get_first_six(),
-            'last_four': self.get_last_four(),
-            'card_type': self.card_type.value,
-            'product_type': self.product_type.value,
-            'card_holder_name': self.card_holder_name,
-            'expiry_month': self.expiry_month,
-            'expiry_year': self.expiry_year,
-            'credit_limit': float(self.credit_limit),
-            'available_credit': float(self.available_credit),
-            'is_active': self.is_active,
+            'id': self.id,
+            'credit_card_id': self.credit_card_id,
+            'amount': float(self.amount),
+            'merchant_name': self.merchant_name,
+            'merchant_category': self.merchant_category,
+            'transaction_date': self.transaction_date.isoformat(),
+            'status': self.status.value,
+            'reference_number': self.reference_number,
+            'description': self.description,
             'created_at': self.created_at.isoformat()
         }
-    credit_card_id = db.Column(db.Integer, db.ForeignKey('credit_cards.id'), nullable=False)
+
 # Card Token Mapping Table
 class CardToken(db.Model):
     __tablename__ = 'card_tokens'
@@ -264,28 +271,6 @@ class CardToken(db.Model):
             'created_at': self.created_at.isoformat(),
             'last_used': self.last_used.isoformat() if self.last_used else None,
             'expires_at': self.expires_at.isoformat() if self.expires_at else None
-        }
-    amount = db.Column(Numeric(10, 2), nullable=False)
-    merchant_name = db.Column(db.String(200), nullable=False)
-    merchant_category = db.Column(db.String(100))
-    transaction_date = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(SQLAlchemyEnum(PaymentStatus), default=PaymentStatus.PENDING)
-    reference_number = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'credit_card_id': self.credit_card_id,
-            'amount': float(self.amount),
-            'merchant_name': self.merchant_name,
-            'merchant_category': self.merchant_category,
-            'transaction_date': self.transaction_date.isoformat(),
-            'status': self.status.value,
-            'reference_number': self.reference_number,
-            'description': self.description,
-            'created_at': self.created_at.isoformat()
         }
 
 # Offer Model

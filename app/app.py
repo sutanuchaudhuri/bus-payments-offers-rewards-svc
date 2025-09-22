@@ -1,5 +1,4 @@
 from flask import Flask, request
-from flask_migrate import Migrate
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import CORS
 from datetime import datetime, timezone
@@ -52,12 +51,6 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
-    # Enable CORS for API endpoints
-    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5001", "http://127.0.0.1:5001"]}}, supports_credentials=True)
-
-    # Import and initialize db from models
-    from app.models import db
-    db.init_app(app)
     # Enable CORS for API endpoints - allow access from all origins for development
     CORS(app, resources={
         r"/api/*": {
@@ -66,8 +59,10 @@ def create_app():
             "allow_headers": ["Content-Type", "Authorization"]
         }
     }, supports_credentials=True)
-    # Import models (after db initialization)
-    from app.models import Customer, CreditCard, Merchant, Offer, CustomerOffer, Payment, Reward, CustomerProfileHistory
+
+    # Import and initialize db from models
+    from app.models import db
+    db.init_app(app)
 
     # Import routes
     from app.routes.customers import customer_bp
@@ -87,7 +82,8 @@ def create_app():
         """Dynamic swagger specification endpoint"""
         # Get the host and port from the request
         host = request.host.split(':')[0] if ':' in request.host else request.host
-        port = request.host.split(':')[1] if ':' in request.host else '80'
+        port_str = request.host.split(':')[1] if ':' in request.host else '80'
+        port = int(port_str)
 
         # Create and return the dynamic swagger spec
         spec = create_swagger_spec(host, port)
