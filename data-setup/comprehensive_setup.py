@@ -120,7 +120,13 @@ class ComprehensiveDatabaseSetup:
             print(f"❌ Error creating database schema: {e}")
             print(traceback.format_exc())
             return False
+
+    def create_sample_data(self):
+        """Create comprehensive sample data"""
+        print("\n📊 Creating comprehensive sample data...")
         try:
+            with self.app.app_context():
+                from app.models import (
                     Customer, CreditCard, Merchant, Offer, Payment, Reward,
                     CreditCardProduct, CardType, MerchantCategory, OfferCategory, PaymentStatus
                 )

@@ -648,6 +648,7 @@ class DataSetupManager:
                 end_date = start_date + timedelta(days=random.randint(60, 180))
 
                 offer = Offer(
+                    offer_id=f"OFFER_{offers_created+1:03d}",  # Add the required offer_id
                     title=template[0],
                     description=template[1],
                     category=offer_category,
