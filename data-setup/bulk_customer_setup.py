@@ -246,7 +246,13 @@ class BulkCustomerSetupManager:
                 # Store customer with profile info
                 customer.profile_type = profile["name"]
                 self.customers.append(customer)
+                # Generate unique alphanumeric customer ID
+                customer_id = generate_customer_id()
+                while Customer.query.filter_by(customer_id=customer_id).first():
+                    customer_id = generate_customer_id()
 
+
+                    customer_id=customer_id,
                 if (i + 1) % 50 == 0:
                     print(f"   Created {i + 1} customers...")
 

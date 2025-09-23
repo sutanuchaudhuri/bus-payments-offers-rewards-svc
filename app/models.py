@@ -280,20 +280,20 @@ class Offer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    offer_id = db.Column(db.String(20), unique=True, nullable=False)  # Alphanumeric offer ID
+    offer_id = db.Column(db.String(20), unique=True, nullable=False)  # Alphanumeric offer ID
     category = db.Column(SQLAlchemyEnum(OfferCategory), nullable=False)
-    merchant_id = db.Column(db.Integer, db.ForeignKey('merchants.id'), nullable=True)  # Optional for generic offers
     merchant_name = db.Column(db.String(200))  # Deprecated - use merchant relationship
     discount_percentage = db.Column(Numeric(5, 2))
-    max_discount_amount = db.Column(Numeric(10, 2))
-    min_transaction_amount = db.Column(Numeric(10, 2))
     reward_points = db.Column(db.Integer, default=0)
+    max_discount_amount = db.Column(Numeric(10, 2))
     start_date = db.Column(db.DateTime, nullable=False)
     expiry_date = db.Column(db.DateTime, nullable=False)
     terms_and_conditions = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True)
     max_usage_per_customer = db.Column(db.Integer, default=1)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     customer_activations = db.relationship('CustomerOffer', backref='offer', lazy=True)
     merchant_history = db.relationship('MerchantOfferHistory', backref='offer', lazy=True)
@@ -303,13 +303,14 @@ class Offer(db.Model):
             'id': self.id,
             'title': self.title,
             'description': self.description,
+            'offer_id': self.offer_id,
+            'offer_id': self.offer_id,
             'category': self.category.value,
-            'merchant_id': self.merchant_id,
             'merchant_name': self.merchant_details.name if self.merchant_details else self.merchant_name,
             'merchant_category': self.merchant_details.category.value if self.merchant_details else None,
-            'discount_percentage': float(self.discount_percentage) if self.discount_percentage else None,
-            'max_discount_amount': float(self.max_discount_amount) if self.max_discount_amount else None,
             'min_transaction_amount': float(self.min_transaction_amount) if self.min_transaction_amount else None,
+            'merchant_category': self.merchant_details.category.value if self.merchant_details else None,
+            'discount_percentage': float(self.discount_percentage) if self.discount_percentage else None,
             'reward_points': self.reward_points,
             'start_date': self.start_date.isoformat(),
             'expiry_date': self.expiry_date.isoformat(),
@@ -331,9 +332,10 @@ class CustomerOffer(db.Model):
     total_savings = db.Column(Numeric(10, 2), default=0.00)
     is_active = db.Column(db.Boolean, default=True)
     
-    # Unique constraint to prevent duplicate activations
     __table_args__ = (db.UniqueConstraint('customer_id', 'offer_id'),)
-    
+    is_active = db.Column(db.Boolean, default=True)
+
+
     def to_dict(self):
         return {
             'id': self.id,
