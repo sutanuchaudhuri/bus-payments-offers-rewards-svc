@@ -282,10 +282,12 @@ class Offer(db.Model):
     description = db.Column(db.Text)
     offer_id = db.Column(db.String(20), unique=True, nullable=False)  # Alphanumeric offer ID
     offer_id = db.Column(db.String(20), unique=True, nullable=False)  # Alphanumeric offer ID
+    merchant_id = db.Column(db.Integer, db.ForeignKey('merchants.id'), nullable=True)  # Foreign key to merchants
     category = db.Column(SQLAlchemyEnum(OfferCategory), nullable=False)
     merchant_name = db.Column(db.String(200))  # Deprecated - use merchant relationship
     discount_percentage = db.Column(Numeric(5, 2))
     reward_points = db.Column(db.Integer, default=0)
+    min_transaction_amount = db.Column(Numeric(10, 2))  # Add this missing field
     max_discount_amount = db.Column(Numeric(10, 2))
     start_date = db.Column(db.DateTime, nullable=False)
     expiry_date = db.Column(db.DateTime, nullable=False)
@@ -308,8 +310,9 @@ class Offer(db.Model):
             'category': self.category.value,
             'merchant_name': self.merchant_details.name if self.merchant_details else self.merchant_name,
             'merchant_category': self.merchant_details.category.value if self.merchant_details else None,
-            'min_transaction_amount': float(self.min_transaction_amount) if self.min_transaction_amount else None,
+            'reward_points': self.reward_points,
             'merchant_category': self.merchant_details.category.value if self.merchant_details else None,
+            'start_date': self.start_date.isoformat(),
             'discount_percentage': float(self.discount_percentage) if self.discount_percentage else None,
             'reward_points': self.reward_points,
             'start_date': self.start_date.isoformat(),
@@ -333,7 +336,6 @@ class CustomerOffer(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     
     __table_args__ = (db.UniqueConstraint('customer_id', 'offer_id'),)
-    is_active = db.Column(db.Boolean, default=True)
 
 
     def to_dict(self):

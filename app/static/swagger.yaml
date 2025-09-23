@@ -1,92 +1,185 @@
 openapi: 3.0.0
 info:
   title: Bus Payments & Rewards API
-  description: Comprehensive API for bus payment system with offers, rewards, bookings, and refunds
+  description: |
+    ## Comprehensive Bus Payment System with Integrated Offers & Rewards Platform
+    
+    This API provides a complete payment processing ecosystem for bus transportation services, featuring:
+    
+    ### Core Features
+    - **Customer Management**: Complete customer lifecycle management with profile tracking
+    - **Credit Card Processing**: Multi-tier credit card support with real-time balance management
+    - **Payment Processing**: Secure payment processing with automatic reward calculation
+    - **Dynamic Offers**: Category-based offer system with merchant integration
+    - **Rewards Program**: Point-based rewards with multiple redemption options
+    - **Refund Management**: Comprehensive refund processing for various scenarios
+    - **Token Management**: Secure card tokenization for enhanced security
+    
+    ### Business Logic
+    - Reward points calculated based on card tier: Platinum (3x), Gold (2x), Silver (1.5x), Basic (1x)
+    - Offers support activation limits and usage tracking per customer
+    - Credit limit validation ensures payments don't exceed available credit
+    - Automatic expiry management for rewards (365 days from earning)
+    - Real-time credit utilization tracking and updates
+    
+    ### Integration Capabilities
+    - Travel booking integration (flights, hotels)
+    - Shopping platform integration
+    - Merchant analytics and reporting
+    - External service booking management
+    
+    ### Security Features
+    - Card number masking in all responses
+    - Secure tokenization for payment processing
+    - Credit limit validation and fraud prevention
+    
+    For detailed API usage examples, see the Bruno collection included with this project.
   version: 1.0.0
+  contact:
+    name: API Support
+    email: support@buspayments.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 servers:
   - url: http://localhost:{port}
-    description: Local development server
+    description: Local development server with configurable port
     variables:
       port:
         default: '5006'
-        description: Server port number
+        description: Server port number (configurable via environment)
 components:
   schemas:
     MerchantCategory:
       type: string
+      description: |
+        Merchant business categories for payment classification and offer targeting.
+        Used to categorize merchants for analytics, offer matching, and reward calculations.
+        Each category supports specific business rules and promotional strategies.
       enum:
-        - RESTAURANT
-        - RETAIL_STORE
-        - GAS_STATION
-        - AIRLINE
-        - HOTEL
-        - E_COMMERCE
-        - GROCERY_STORE
-        - PHARMACY
-        - ENTERTAINMENT_VENUE
-        - HEALTHCARE_PROVIDER
-        - TELECOM_PROVIDER
-        - UTILITY_COMPANY
-        - INSURANCE_COMPANY
-        - EDUCATIONAL_INSTITUTION
-        - AUTOMOTIVE_SERVICE
-        - HOME_IMPROVEMENT
-        - FASHION_RETAILER
-        - ELECTRONICS_STORE
-        - SUBSCRIPTION_SERVICE
-        - FINANCIAL_SERVICE
-        - FITNESS_CENTER
+        - RESTAURANT          # Food service establishments, cafes, fast food
+        - RETAIL_STORE        # General retail outlets, department stores
+        - GAS_STATION         # Fuel stations, automotive services
+        - AIRLINE             # Airlines, flight booking services
+        - HOTEL               # Hotels, resorts, accommodation services
+        - E_COMMERCE          # Online retailers, digital marketplaces
+        - GROCERY_STORE       # Supermarkets, food stores, convenience stores
+        - PHARMACY            # Drugstores, medical supply stores
+        - ENTERTAINMENT_VENUE # Theaters, amusement parks, entertainment facilities
+        - HEALTHCARE_PROVIDER # Hospitals, clinics, medical services
+        - TELECOM_PROVIDER    # Mobile, internet, communication services
+        - UTILITY_COMPANY     # Electric, gas, water, waste management
+        - INSURANCE_COMPANY   # Life, auto, health, property insurance
+        - EDUCATIONAL_INSTITUTION # Schools, universities, training centers
+        - AUTOMOTIVE_SERVICE  # Car repair, maintenance, automotive parts
+        - HOME_IMPROVEMENT    # Hardware stores, home renovation services
+        - FASHION_RETAILER    # Clothing, accessories, footwear stores
+        - ELECTRONICS_STORE   # Consumer electronics, tech gadgets
+        - SUBSCRIPTION_SERVICE # Streaming, software, membership services
+        - FINANCIAL_SERVICE   # Banks, investment, financial planning
+        - FITNESS_CENTER      # Gyms, sports facilities, wellness centers
+      example: RESTAURANT
+
     CreditCardProduct:
       type: string
+      description: |
+        Credit card product tiers determining reward multipliers and benefits.
+        Each tier offers different reward rates and credit limits:
+        - PLATINUM: 3x rewards, highest credit limits, premium benefits
+        - GOLD: 2x rewards, high credit limits, enhanced benefits  
+        - SILVER: 1.5x rewards, moderate credit limits, standard benefits
+        - BASIC: 1x rewards, basic credit limits, essential benefits
       enum:
-        - BASIC
-        - SILVER
-        - GOLD
-        - PLATINUM
+        - BASIC     # Entry-level card, 1x rewards, basic credit limits
+        - SILVER    # Mid-tier card, 1.5x rewards, moderate benefits
+        - GOLD      # Premium card, 2x rewards, enhanced benefits
+        - PLATINUM  # Ultra-premium card, 3x rewards, exclusive benefits
+      example: GOLD
+
     PaymentStatus:
       type: string
+      description: |
+        Payment transaction status lifecycle tracking.
+        Status progression: PENDING → COMPLETED/FAILED/REFUNDED
+        - PENDING: Payment initiated but not yet processed
+        - COMPLETED: Payment successfully processed and credited
+        - FAILED: Payment processing failed due to insufficient funds or technical issues
+        - REFUNDED: Payment amount returned to customer credit limit
       enum:
-        - PENDING
-        - COMPLETED
-        - FAILED
-        - REFUNDED
+        - PENDING    # Payment initiated, awaiting processing
+        - COMPLETED  # Payment successfully processed
+        - FAILED     # Payment processing failed
+        - REFUNDED   # Payment amount refunded to customer
+      example: COMPLETED
+
     RefundType:
       type: string
+      description: |
+        Types of refund requests supported by the system.
+        Each type has different processing rules and approval workflows:
+        - booking_cancellation: Refunds for cancelled travel/service bookings
+        - dispute_resolution: Refunds for disputed transactions or service issues
+        - goodwill: Discretionary refunds for customer satisfaction
       enum:
-        - booking_cancellation
-        - dispute_resolution
-        - goodwill
+        - booking_cancellation  # Refund due to booking cancellation
+        - dispute_resolution   # Refund for transaction disputes
+        - goodwill            # Goodwill refund for customer satisfaction
+      example: booking_cancellation
+
     RefundStatus:
       type: string
+      description: |
+        Refund request processing status with defined workflow:
+        REQUESTED → APPROVED/DENIED → PROCESSED → COMPLETED
+        Processing times vary by refund type (3-5 business days typical)
       enum:
-        - REQUESTED
-        - APPROVED
-        - DENIED
-        - PROCESSED
-        - COMPLETED
-        - CANCELLED
+        - REQUESTED  # Refund request submitted, awaiting review
+        - APPROVED   # Refund approved, queued for processing
+        - DENIED     # Refund request denied with reason
+        - PROCESSED  # Refund initiated with payment processor
+        - COMPLETED  # Refund amount credited to customer account
+        - CANCELLED  # Refund request cancelled by customer or system
+      example: APPROVED
+
     BookingStatus:
       type: string
+      description: |
+        External service booking status for travel and merchant integrations.
+        Tracks booking lifecycle from confirmation through completion or cancellation.
+        Refund eligibility depends on booking status and cancellation policies.
       enum:
-        - CONFIRMED
-        - CANCELLED
-        - COMPLETED
-        - REFUNDED
+        - CONFIRMED  # Booking confirmed and active
+        - CANCELLED  # Booking cancelled by customer or merchant
+        - COMPLETED  # Service completed successfully
+        - REFUNDED   # Booking refunded due to cancellation
+      example: CONFIRMED
+
     RewardStatus:
       type: string
+      description: |
+        Reward points lifecycle status tracking.
+        Points automatically expire after 365 days if not redeemed.
+        EARNED → REDEEMED/EXPIRED progression with balance tracking.
       enum:
-        - EARNED
-        - REDEEMED
-        - EXPIRED
+        - EARNED    # Points earned from transaction, available for redemption
+        - REDEEMED  # Points redeemed for benefits or cashback
+        - EXPIRED   # Points expired after 365 days without redemption
+      example: EARNED
+
     OfferCategory:
       type: string
+      description: |
+        Offer categories for targeted promotions and customer engagement.
+        Categories align with merchant types and customer spending patterns.
+        Used for offer filtering, analytics, and personalized recommendations.
       enum:
-        - TRAVEL
-        - MERCHANT
-        - CASHBACK
-        - DINING
-        - FUEL
-        - SHOPPING
+        - TRAVEL     # Flight, hotel, transportation offers
+        - MERCHANT   # Retail store and service provider offers
+        - CASHBACK   # Direct cashback and rebate offers
+        - DINING     # Restaurant and food service offers
+        - FUEL       # Gas station and automotive offers
+        - SHOPPING   # E-commerce and retail shopping offers
+      example: TRAVEL
 
 paths:
   # Health and General
@@ -95,9 +188,13 @@ paths:
       tags:
         - General
       summary: Health check endpoint
+      description: |
+        Provides system health status for monitoring and load balancing.
+        Returns service status, timestamp, and basic system information.
+        Used by monitoring tools to verify service availability.
       responses:
         '200':
-          description: Service is healthy
+          description: Service is healthy and operational
           content:
             application/json:
               schema:
@@ -105,18 +202,25 @@ paths:
                 properties:
                   status:
                     type: string
+                    example: "healthy"
+                    description: Current service health status
                   timestamp:
                     type: string
                     format: date-time
+                    description: UTC timestamp of health check
 
   /:
     get:
       tags:
         - General
-      summary: API information
+      summary: API information and documentation links
+      description: |
+        Root endpoint providing API metadata and navigation links.
+        Returns version information, documentation URLs, and available endpoints.
+        Useful for API discovery and client configuration.
       responses:
         '200':
-          description: API information
+          description: API information and available endpoints
           content:
             application/json:
               schema:
@@ -124,37 +228,69 @@ paths:
                 properties:
                   message:
                     type: string
+                    example: "Bus Payments & Rewards API"
+                    description: API welcome message
                   version:
                     type: string
+                    example: "1.0.0"
+                    description: Current API version
                   docs:
                     type: string
+                    example: "/docs"
+                    description: Swagger documentation URL
                   health:
                     type: string
+                    example: "/api/health"
+                    description: Health check endpoint URL
 
-  # Customer Management
+  # Customer Management - Enhanced Descriptions
   /api/customers:
     get:
       tags:
         - Customers
-      summary: List all customers
+      summary: List all customers with pagination and filtering
+      description: |
+        Retrieves a paginated list of all customers in the system.
+        
+        **Features:**
+        - Pagination support with configurable page size
+        - Email-based filtering for customer lookup
+        - Returns customer count and pagination metadata
+        
+        **Business Rules:**
+        - Maximum 100 customers per page (configurable)
+        - Results ordered by creation date (newest first)
+        - Email filtering supports partial matches
+        
+        **Use Cases:**
+        - Customer service lookup
+        - Administrative customer management
+        - Customer list generation for reports
       parameters:
         - in: query
           name: page
           schema:
             type: integer
             default: 1
+            minimum: 1
+          description: Page number for pagination (1-based)
         - in: query
           name: per_page
           schema:
             type: integer
             default: 10
+            minimum: 1
+            maximum: 100
+          description: Number of customers per page
         - in: query
           name: email
           schema:
             type: string
+            format: email
+          description: Filter customers by email address (partial match supported)
       responses:
         '200':
-          description: List of customers
+          description: Paginated list of customers with metadata
           content:
             application/json:
               schema:
@@ -164,18 +300,85 @@ paths:
                     type: array
                     items:
                       type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Unique customer identifier
+                        first_name:
+                          type: string
+                          description: Customer's first name
+                        last_name:
+                          type: string
+                          description: Customer's last name
+                        email:
+                          type: string
+                          format: email
+                          description: Customer's email address (unique)
+                        phone:
+                          type: string
+                          nullable: true
+                          description: Customer's phone number
+                        date_of_birth:
+                          type: string
+                          format: date
+                          nullable: true
+                          description: Customer's date of birth (YYYY-MM-DD)
+                        address:
+                          type: string
+                          nullable: true
+                          description: Customer's address
+                        created_at:
+                          type: string
+                          format: date-time
+                          description: Account creation timestamp
+                        updated_at:
+                          type: string
+                          format: date-time
+                          description: Last update timestamp
                   total:
                     type: integer
+                    description: Total number of customers in system
                   pages:
                     type: integer
+                    description: Total number of pages available
                   current_page:
                     type: integer
+                    description: Current page number
                   per_page:
                     type: integer
+                    description: Number of customers per page
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error"
+
     post:
       tags:
         - Customers
-      summary: Create new customer
+      summary: Create new customer account
+      description: |
+        Creates a new customer account in the system.
+        
+        **Validation Rules:**
+        - Email must be unique across all customers
+        - First name and last name are required
+        - Date of birth must be in YYYY-MM-DD format
+        - Phone and address are optional
+        
+        **Business Logic:**
+        - Automatically sets creation and update timestamps
+        - Email uniqueness validation prevents duplicates
+        - Returns complete customer profile upon successful creation
+        
+        **Security:**
+        - Input validation and sanitization applied
+        - SQL injection protection enabled
       requestBody:
         required: true
         content:
@@ -185,18 +388,37 @@ paths:
               properties:
                 first_name:
                   type: string
+                  minLength: 1
+                  maxLength: 100
+                  description: Customer's first name (required)
+                  example: "John"
                 last_name:
                   type: string
+                  minLength: 1
+                  maxLength: 100
+                  description: Customer's last name (required)
+                  example: "Doe"
                 email:
                   type: string
                   format: email
+                  maxLength: 255
+                  description: Customer's email address (unique, required)
+                  example: "john.doe@example.com"
                 phone:
                   type: string
+                  maxLength: 20
+                  description: Customer's phone number (optional)
+                  example: "+1-555-123-4567"
                 date_of_birth:
                   type: string
                   format: date
+                  description: Customer's date of birth in YYYY-MM-DD format (optional)
+                  example: "1990-01-15"
                 address:
                   type: string
+                  maxLength: 500
+                  description: Customer's address (optional)
+                  example: "123 Main St, City, State 12345"
               required:
                 - first_name
                 - last_name
@@ -204,10 +426,42 @@ paths:
       responses:
         '201':
           description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Customer created successfully"
+                  customer:
+                    type: object
+                    description: Complete customer profile
         '400':
-          description: Invalid data
+          description: Invalid input data or validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    examples:
+                      missing_field: "first_name is required"
+                      invalid_date: "Invalid date format. Use YYYY-MM-DD"
+                      invalid_email: "Invalid email format"
         '409':
-          description: Email already exists
+          description: Email address already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Email already exists"
+        '500':
+          description: Internal server error
 
   /api/customers/{customer_id}:
     get:
@@ -411,42 +665,166 @@ paths:
         '404':
           description: Credit card not found
 
-  # Payment Processing
+  # Payment Processing - Enhanced with Business Logic
   /api/payments:
     get:
       tags:
         - Payments
-      summary: List payments
+      summary: List payments with filtering and pagination
+      description: |
+        Retrieves a paginated list of payment transactions with advanced filtering capabilities.
+        
+        **Features:**
+        - Multi-criteria filtering (customer, status, merchant)
+        - Pagination with configurable page size
+        - Join with credit card data for customer association
+        - Ordered by transaction date (newest first)
+        
+        **Business Rules:**
+        - Only completed payments are included in analytics
+        - Refunded payments maintain original transaction data
+        - Status filtering supports enum validation
+        - Merchant name filtering uses case-insensitive partial matching
+        
+        **Use Cases:**
+        - Transaction history review
+        - Payment reconciliation
+        - Customer service inquiries
+        - Financial reporting and analytics
       parameters:
         - in: query
           name: page
           schema:
             type: integer
             default: 1
+            minimum: 1
+          description: Page number for pagination (1-based)
         - in: query
           name: per_page
           schema:
             type: integer
             default: 10
+            minimum: 1
+            maximum: 100
+          description: Number of payments per page
         - in: query
           name: customer_id
           schema:
             type: integer
+            minimum: 1
+          description: Filter payments by specific customer ID
         - in: query
           name: status
           schema:
             $ref: '#/components/schemas/PaymentStatus'
+          description: Filter payments by transaction status
         - in: query
           name: merchant_name
           schema:
             type: string
+            minLength: 1
+          description: Filter payments by merchant name (partial match, case-insensitive)
       responses:
         '200':
-          description: List of payments
+          description: Paginated list of payments with transaction details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Unique payment identifier
+                        credit_card_id:
+                          type: integer
+                          description: Associated credit card ID
+                        amount:
+                          type: number
+                          format: float
+                          description: Payment amount in currency units
+                        merchant_name:
+                          type: string
+                          description: Merchant or service provider name
+                        merchant_category:
+                          type: string
+                          description: Merchant business category
+                        transaction_date:
+                          type: string
+                          format: date-time
+                          description: UTC timestamp of transaction
+                        status:
+                          $ref: '#/components/schemas/PaymentStatus'
+                        reference_number:
+                          type: string
+                          description: "Unique transaction reference (format: PAY-YYYYMMDD-XXXXXXXX)"
+                        description:
+                          type: string
+                          description: Transaction description or memo
+                        created_at:
+                          type: string
+                          format: date-time
+                          description: Record creation timestamp
+                  total:
+                    type: integer
+                    description: Total number of payments matching criteria
+                  pages:
+                    type: integer
+                    description: Total number of pages available
+                  current_page:
+                    type: integer
+                    description: Current page number
+                  per_page:
+                    type: integer
+                    description: Number of payments per page
+        '400':
+          description: Invalid filter parameters or validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    examples:
+                      invalid_status: "Invalid status. Valid statuses: ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']"
+                      invalid_customer: "Customer ID must be a positive integer"
+        '500':
+          description: Internal server error
+
     post:
       tags:
         - Payments
-      summary: Make a payment
+      summary: Process a new payment transaction
+      description: |
+        Processes a payment transaction with automatic reward calculation and credit limit validation.
+        
+        **Business Logic:**
+        - Validates credit card is active and not expired
+        - Checks available credit limit before processing
+        - Automatically calculates reward points based on card tier:
+          * PLATINUM: 3x points per dollar
+          * GOLD: 2x points per dollar  
+          * SILVER: 1.5x points per dollar
+          * BASIC: 1x points per dollar
+        - Updates available credit in real-time
+        - Creates reward record with 365-day expiry
+        - Generates unique reference number
+        
+        **Validation Rules:**
+        - Amount must be positive (minimum $0.01)
+        - Credit card must exist and be active
+        - Available credit must cover payment amount
+        - Merchant name is required
+        
+        **Security Features:**
+        - Real-time fraud detection
+        - Credit limit enforcement
+        - Transaction logging and audit trail
       requestBody:
         required: true
         content:
@@ -456,27 +834,101 @@ paths:
               properties:
                 credit_card_id:
                   type: integer
+                  minimum: 1
+                  description: ID of the credit card to charge (required)
+                  example: 1
                 amount:
                   type: number
                   format: float
                   minimum: 0.01
+                  description: Payment amount in currency units (required, minimum $0.01)
+                  example: 25.50
                 merchant_name:
                   type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Name of merchant or service provider (required)
+                  example: "Starbucks Coffee"
                 description:
                   type: string
+                  maxLength: 500
+                  description: Optional transaction description or memo
+                  example: "Coffee and pastry purchase"
                 category:
                   type: string
+                  maxLength: 100
+                  description: Optional transaction category for analytics
+                  example: "dining"
+                  default: "general"
               required:
                 - credit_card_id
                 - amount
                 - merchant_name
       responses:
         '201':
-          description: Payment processed successfully
+          description: Payment processed successfully with reward points
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Payment transaction ID
+                  credit_card_id:
+                    type: integer
+                    description: Credit card used for payment
+                  amount:
+                    type: number
+                    format: float
+                    description: Payment amount processed
+                  merchant_name:
+                    type: string
+                    description: Merchant name
+                  status:
+                    type: string
+                    enum: [COMPLETED]
+                    description: Payment status (always COMPLETED for successful payments)
+                  reference_number:
+                    type: string
+                    description: Unique transaction reference number
+                  transaction_date:
+                    type: string
+                    format: date-time
+                    description: Transaction timestamp
+                  points_earned:
+                    type: integer
+                    description: Reward points earned from this transaction
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: Record creation timestamp
         '400':
-          description: Invalid data or insufficient credit
+          description: Payment validation failed or insufficient credit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    examples:
+                      missing_field: "credit_card_id is required"
+                      invalid_amount: "Amount must be positive"
+                      insufficient_credit: "Insufficient credit available"
+                      inactive_card: "Credit card is not active"
         '404':
           description: Credit card not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Credit card not found"
+        '500':
+          description: Payment processing failed due to system error
 
   /api/payments/{payment_id}:
     get:

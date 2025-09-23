@@ -1,0 +1,48 @@
+Error: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Merchant(merchants)]'. Original exception was: Could not determine join condition between parent/child tables on relationship Merchant.offers - there are no foreign keys linking these tables.  Ensure that referencing columns are associated with a ForeignKey or ForeignKeyConstraint, or specify a 'primaryjoin' expression.
+Traceback (most recent call last):
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/setup_db.py", line 49, in main
+    data_manager.setup_all_data()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/data-setup/comprehensive_data_setup.py", line 55, in setup_all_data
+    self.create_customer_c0001()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/data-setup/comprehensive_data_setup.py", line 126, in create_customer_c0001
+    existing_customer = Customer.query.filter_by(email="sutanu.chaudhuri@example.com").first()
+                        ^^^^^^^^^^^^^^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/flask_sqlalchemy/model.py", line 30, in __get__
+    return cls.query_class(
+           ~~~~~~~~~~~~~~~^
+        cls, session=cls.__fsa__.session()  # type: ignore[arg-type]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py", line 276, in __init__
+    self._set_entities(entities)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py", line 289, in _set_entities
+    coercions.expect(
+    ~~~~~~~~~~~~~~~~^
+        roles.ColumnsClauseRole,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        post_inspect=True,
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/sqlalchemy/sql/coercions.py", line 388, in expect
+    insp._post_inspect
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 1338, in __get__
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+                                           ~~~~~~~~~^^^^^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/sqlalchemy/orm/mapper.py", line 2724, in _post_inspect
+    self._check_configure()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/sqlalchemy/orm/mapper.py", line 2401, in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/sqlalchemy/orm/mapper.py", line 4218, in _configure_registries
+    _do_configure_registries(registries, cascade)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sutanuchaudhuri/Developer/AI-POCs/bus-payments-offers-rewards/bus-payments-offers-rewards-svc/.venv/lib/python3.13/site-packages/sqlalchemy/orm/mapper.py", line 4255, in _do_configure_registries
+    raise e
+sqlalchemy.exc.InvalidRequestError: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Merchant(merchants)]'. Original exception was: Could not determine join condition between parent/child tables on relationship Merchant.offers - there are no foreign keys linking these tables.  Ensure that referencing columns are associated with a ForeignKey or ForeignKeyConstraint, or specify a 'primaryjoin' expression.

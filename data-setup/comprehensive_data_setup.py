@@ -680,6 +680,7 @@ class DataSetupManager:
 
                 offer = Offer(
                     title=template[0],
+                    offer_id=f"OFFER_{offers_created+1:03d}",  # Add the required offer_id
                     description=template[1],
                     category=offer_category,
                     merchant_id=merchant.id,
